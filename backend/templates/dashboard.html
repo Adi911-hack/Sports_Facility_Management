@@ -1,0 +1,188 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard | ARENA</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body>
+
+<header class="navbar">
+    <a href="/" class="logo">
+        <span class="logo-icon">A</span>
+        ARENA<span class="logo-dot">.</span>
+    </a>
+
+    <nav class="nav-links">
+        <a href="/">Facilities</a>
+        <a href="{{ url_for('dashboard') }}" class="active">
+            Dashboard
+        </a>
+    </nav>
+
+    <form method="POST"
+          action="{{ url_for('auth.logout') }}">
+
+        <input type="hidden"
+               name="csrf_token"
+               value="{{ csrf_token }}">
+
+        <button class="logout-btn" type="submit">
+            Log Out
+        </button>
+    </form>
+</header>
+
+<main class="dashboard-container">
+
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+        <div class="alert {{ category }}" role="status">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endwith %}
+
+
+    <span class="eyebrow">MY ARENA</span>
+
+    <h1>Welcome, {{ user.full_name }}! 👋</h1>
+
+    <p class="auth-subtitle">
+        Your sports activities, all in one place.
+    </p>
+
+    <section class="dashboard-stats">
+
+        <div class="stat-card">
+            <h2>{{ total_bookings }}</h2>
+            <p>Total Bookings</p>
+        </div>
+
+        <div class="stat-card">
+            <h2>{{ user.role }}</h2>
+            <p>Account Type</p>
+        </div>
+
+        <div class="stat-card">
+            <h2>{{ user.user_id }}</h2>
+            <p>User ID</p>
+        </div>
+
+    </section>
+
+    <section class="dashboard-section">
+
+        <div class="dashboard-heading">
+            <h2>My Bookings</h2>
+
+            <a href="/" class="primary-btn">
+                Explore Facilities →
+            </a>
+        </div>
+
+        {% if bookings %}
+
+        <div class="table-wrapper">
+            <table class="bookings-table">
+                <thead>
+                    <tr>
+                        <th>Facility</th>
+                        <th>Sport</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for booking in bookings %}
+                    <tr>
+                        <td>{{ booking.facility_name }}</td>
+                        <td>{{ booking.sport_name }}</td>
+                        <td>{{ booking.booking_date }}</td>
+                        <td>
+                            {{ booking.start_time }}
+                            –
+                            {{ booking.end_time }}
+                        </td>
+                        <td>
+                            <span class="status
+                                {% if booking.status == 'CONFIRMED' %}
+                                    available
+                                {% else %}
+                                    unavailable
+                                {% endif %}">
+                                {{ booking.status }}
+                            </span>
+                        </td>
+
+<td>
+    {% if booking.status == 'CONFIRMED' %}
+
+        <form
+            method="POST"
+            action="{{ url_for(
+                'cancel_booking',
+                booking_id=booking.booking_id
+            ) }}"
+            onsubmit="return confirm(
+                'Are you sure you want to cancel this booking?'
+            );"
+        >
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token }}"
+            >
+
+            <button
+                type="submit"
+                class="cancel-booking-btn"
+            >
+                Cancel Booking
+            </button>
+        </form>
+
+    {% else %}
+
+        <span class="no-action">
+            —
+        </span>
+
+    {% endif %}
+</td>
+
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% else %}
+
+        <div class="empty-dashboard">
+            <h3>No bookings yet 🏸</h3>
+            <p>
+                Explore the facilities and book
+                your first sports session.
+            </p>
+        </div>
+
+        {% endif %}
+    </section>
+</main>
+
+</body>
+</html>

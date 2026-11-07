@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Dashboard | ARENA</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body>
+
+<header class="navbar">
+    <a href="/" class="logo">
+        <span class="logo-icon">A</span>
+        ARENA<span class="logo-dot">.</span>
+    </a>
+
+    <nav class="nav-links">
+        <a href="/">Facilities</a>
+        <a href="/admin" class="active">
+            Admin Dashboard
+        </a>
+    </nav>
+
+    <form method="POST"
+          action="{{ url_for('auth.logout') }}">
+
+        <input type="hidden"
+               name="csrf_token"
+               value="{{ csrf_token }}">
+
+        <button class="logout-btn" type="submit">
+            Log Out
+        </button>
+    </form>
+</header>
+
+<main class="dashboard-container">
+
+    <span class="eyebrow">ARENA MANAGEMENT</span>
+
+    <h1>Admin Dashboard 🛡️</h1>
+
+<div style="margin: 24px 0;">
+    <a
+        href="{{ url_for('admin_reviews.feedback_dashboard') }}"
+        class="primary-btn"
+    >
+        Manage Student Feedback →
+    </a>
+</div>
+
+
+    <p class="auth-subtitle">
+        Monitor facilities, students, bookings,
+        and tournaments.
+    </p>
+
+    <section class="dashboard-stats">
+
+        <div class="stat-card">
+            <h2>{{ stats.total_students }}</h2>
+            <p>Registered Students</p>
+        </div>
+
+        <div class="stat-card">
+            <h2>{{ stats.total_facilities }}</h2>
+            <p>Sports Facilities</p>
+        </div>
+
+        <div class="stat-card">
+            <h2>{{ stats.total_bookings }}</h2>
+            <p>Total Bookings</p>
+        </div>
+
+        <div class="stat-card">
+            <h2>{{ stats.total_tournaments }}</h2>
+            <p>Tournaments</p>
+        </div>
+
+    </section>
+
+    <section class="dashboard-section">
+
+        <div class="dashboard-heading">
+            <h2>Facility Management</h2>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="bookings-table">
+
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Facility</th>
+                        <th>Sport</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for facility in facilities %}
+                    <tr>
+                        <td>{{ facility.facility_id }}</td>
+                        <td>{{ facility.facility_name }}</td>
+                        <td>{{ facility.sport_name }}</td>
+                        <td>{{ facility.location }}</td>
+                        <td>
+                            <span class="status
+                                {% if facility.status == 'AVAILABLE' %}
+                                available
+                                {% else %}
+                                unavailable
+                                {% endif %}">
+                                {{ facility.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+
+    </section>
+
+</main>
+
+</body>
+</html>

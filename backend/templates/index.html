@@ -1,0 +1,493 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>ARENA | Sports Facility Management</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <!-- NAVIGATION -->
+    <header class="navbar">
+        <a class="logo" href="/">
+            <span class="logo-icon">A</span>
+            ARENA<span class="logo-dot">.</span>
+        </a>
+
+        <nav class="nav-links">
+            <a href="/" class="active">Facilities</a>
+            <a href="#sports">Sports</a>
+            <a href="#facilities">Explore</a>
+        </nav>
+
+        {% if current_user_role == 'ADMIN' %}
+
+            <a class="nav-label"
+               href="{{ url_for('admin_dashboard') }}">
+                Admin Dashboard →
+            </a>
+
+        {% elif current_user_name %}
+
+            <a class="nav-label"
+               href="{{ url_for('dashboard') }}">
+                My Dashboard →
+            </a>
+
+        {% else %}
+
+            <a class="nav-label"
+               href="{{ url_for('auth.login') }}">
+                Login / Sign Up →
+            </a>
+
+        {% endif %}
+
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="hero-content">
+
+            <span class="eyebrow">
+                YOUR CAMPUS. YOUR GAME.
+            </span>
+
+            <h1>
+                Find your space.<br>
+                <span>Own your game.</span>
+            </h1>
+
+            <p>
+                Explore campus sports facilities,
+                discover your next game, and find
+                the perfect place to play.
+            </p>
+
+            <a href="#facilities" class="primary-btn">
+                Explore Facilities &rarr;
+            </a>
+
+        </div>
+
+        <div class="hero-visual">
+            <div class="hero-icon">🏆</div>
+            <h3>PLAY MORE. LIVE MORE.</h3>
+            <p>One platform for campus sports.</p>
+        </div>
+    </section>
+
+    <!-- STATISTICS -->
+    <section class="stats">
+
+        <div class="stat-card">
+            <h2 id="total-facilities">--</h2>
+            <p>Sports Facilities</p>
+        </div>
+
+        <div class="stat-card">
+            <h2 id="total-sports">--</h2>
+            <p>Sports Available</p>
+        </div>
+
+        <div class="stat-card">
+            <h2 id="available-facilities">--</h2>
+            <p>Operational Facilities</p>
+        </div>
+
+    </section>
+
+    <!-- FACILITIES -->
+    <section class="facilities-section" id="facilities">
+
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">
+                    DISCOVER ARENA
+                </span>
+
+                <h2>Explore Facilities</h2>
+
+                <p>
+                    Browse our sports facilities
+                    and find your next playing space.
+                </p>
+            </div>
+        </div>
+
+        <!-- SEARCH AND FILTER -->
+        <div class="filter-bar" id="sports">
+
+            <input
+                type="search"
+                id="search-input"
+                placeholder="Search facilities..."
+                aria-label="Search facilities"
+            >
+
+            <select
+                id="sport-filter"
+                aria-label="Filter by sport"
+            >
+                <option value="all">
+                    All Sports
+                </option>
+            </select>
+
+        </div>
+
+        <!-- DYNAMIC FACILITY CARDS -->
+        <div
+            id="facilities-grid"
+            class="facilities-grid"
+        >
+            <p class="loading">
+                Loading facilities...
+            </p>
+        </div>
+
+        <p
+            id="error-message"
+            class="error-message"
+            role="alert"
+            hidden
+        ></p>
+
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-logo">ARENA.</div>
+        <p>Sports Facility Management System</p>
+        <p>Built with Flask &amp; MySQL</p>
+    </footer>
+
+    <!-- HOMEPAGE JAVASCRIPT -->
+    <script>
+
+        let allFacilities = [];
+
+        const sportIcons = {
+            "Badminton": "🏸",
+            "Basketball": "🏀",
+            "Football": "⚽",
+            "Table Tennis": "🏓",
+            "Cricket": "🏏",
+            "Tennis": "🎾"
+        };
+
+        // CREATE HTML ELEMENT SAFELY
+        function makeElement(tag, className, text) {
+
+            const element = document.createElement(tag);
+
+            if (className) {
+                element.className = className;
+            }
+
+            if (text !== undefined) {
+                element.textContent = text;
+            }
+
+            return element;
+        }
+
+
+        // DISPLAY FACILITY CARDS
+        function renderFacilities() {
+
+            const search = document
+                .getElementById("search-input")
+                .value.toLowerCase();
+
+            const selectedSport = document
+                .getElementById("sport-filter")
+                .value;
+
+            const filtered = allFacilities.filter(f => {
+
+                const matchesSearch =
+                    f.facility_name.toLowerCase().includes(search) ||
+                    f.location.toLowerCase().includes(search);
+
+                const matchesSport =
+                    selectedSport === "all" ||
+                    f.sport_name === selectedSport;
+
+                return matchesSearch && matchesSport;
+            });
+
+            const grid = document.getElementById(
+                "facilities-grid"
+            );
+
+            grid.replaceChildren();
+
+            if (!filtered.length) {
+
+                grid.appendChild(
+                    makeElement(
+                        "p",
+                        "empty-state",
+                        "No matching facilities found."
+                    )
+                );
+
+                return;
+            }
+
+            // CREATE EACH FACILITY CARD
+            filtered.forEach(f => {
+
+                const card = makeElement(
+                    "article",
+                    "facility-card"
+                );
+
+                const icon = makeElement(
+                    "div",
+                    "facility-icon",
+                    sportIcons[f.sport_name] || "🏟️"
+                );
+
+                const body = makeElement(
+                    "div",
+                    "facility-body"
+                );
+
+                const sport = makeElement(
+                    "p",
+                    "sport-label",
+                    f.sport_name
+                );
+
+                const title = makeElement(
+                    "h3",
+                    "",
+                    f.facility_name
+                );
+
+                const location = makeElement(
+                    "p",
+                    "facility-detail",
+                    "📍 " + f.location
+                );
+
+                const capacity = makeElement(
+                    "p",
+                    "facility-detail",
+                    "👥 Capacity: " + f.capacity
+                );
+
+                const status = makeElement(
+                    "span",
+                    "status " + (
+                        f.status === "AVAILABLE"
+                            ? "available"
+                            : "unavailable"
+                    ),
+                    f.status
+                );
+
+                // FACILITY CARD FOOTER
+                const cardFooter = makeElement(
+                    "div",
+                    "facility-footer"
+                );
+
+                // ACTIVE BOOKING BUTTON
+                const button = makeElement(
+                    "button",
+                    "book-btn",
+                    f.status === "AVAILABLE"
+                        ? "Book Now →"
+                        : "Unavailable"
+                );
+
+                // DISABLE BOOKING FOR UNAVAILABLE FACILITIES
+                if (f.status !== "AVAILABLE") {
+
+                    button.disabled = true;
+
+                } else {
+
+                    // OPEN BOOKING PAGE FOR THE SELECTED FACILITY
+                    button.addEventListener("click", () => {
+
+                        window.location.href =
+                            `/book/${f.facility_id}`;
+
+                    });
+
+                }
+
+
+const reviewsLink = makeElement(
+    "a",
+    "reviews-btn",
+    "★ View Reviews"
+);
+
+reviewsLink.href = `/reviews/${f.facility_id}`;
+
+cardFooter.append(
+    status,
+    button,
+    reviewsLink
+);
+
+
+                // ADD CARD CONTENT
+                body.append(
+                    sport,
+                    title,
+                    location,
+                    capacity,
+                    cardFooter
+                );
+
+                card.append(
+                    icon,
+                    body
+                );
+
+                grid.appendChild(card);
+
+            });
+
+        }
+
+
+        // FETCH FACILITIES FROM FLASK API
+        async function loadFacilities() {
+
+            const grid = document.getElementById(
+                "facilities-grid"
+            );
+
+            const error = document.getElementById(
+                "error-message"
+            );
+
+            error.hidden = true;
+            error.textContent = "";
+
+            try {
+
+                const response = await fetch(
+                    "/api/facilities"
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        "Facility API request failed"
+                    );
+                }
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(
+                        "Database request failed"
+                    );
+                }
+
+                allFacilities = data.facilities;
+
+                const sports = [
+                    ...new Set(
+                        allFacilities.map(
+                            f => f.sport_name
+                        )
+                    )
+                ].sort();
+
+                // UPDATE HOMEPAGE STATISTICS
+                document.getElementById(
+                    "total-facilities"
+                ).textContent = allFacilities.length;
+
+                document.getElementById(
+                    "total-sports"
+                ).textContent = sports.length;
+
+                document.getElementById(
+                    "available-facilities"
+                ).textContent = allFacilities.filter(
+                    f => f.status === "AVAILABLE"
+                ).length;
+
+                // POPULATE SPORT FILTER
+                const select = document.getElementById(
+                    "sport-filter"
+                );
+
+                select.replaceChildren();
+
+                const allOption = document.createElement(
+                    "option"
+                );
+
+                allOption.value = "all";
+                allOption.textContent = "All Sports";
+
+                select.appendChild(allOption);
+
+                sports.forEach(sport => {
+
+                    const option = document.createElement(
+                        "option"
+                    );
+
+                    option.value = sport;
+                    option.textContent = sport;
+
+                    select.appendChild(option);
+
+                });
+
+                // DISPLAY FACILITY CARDS
+                renderFacilities();
+
+            } catch (err) {
+
+                grid.replaceChildren();
+
+                error.textContent =
+                    "Unable to load facilities. Check the Flask server.";
+
+                error.hidden = false;
+
+                console.error(err);
+            }
+        }
+
+
+        // LIVE SEARCH
+        document.getElementById("search-input")
+            .addEventListener(
+                "input",
+                renderFacilities
+            );
+
+        // SPORT FILTER
+        document.getElementById("sport-filter")
+            .addEventListener(
+                "change",
+                renderFacilities
+            );
+
+        // INITIAL PAGE LOAD
+        loadFacilities();
+
+    </script>
+
+</body>
+</html>

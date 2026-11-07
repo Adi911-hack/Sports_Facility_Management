@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Book Facility | ARENA</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body>
+
+<header class="navbar">
+    <a href="/" class="logo">
+        <span class="logo-icon">A</span>
+        ARENA<span class="logo-dot">.</span>
+    </a>
+
+    <nav class="nav-links">
+        <a href="/">Facilities</a>
+        <a href="{{ url_for('dashboard') }}">
+            My Dashboard
+        </a>
+    </nav>
+</header>
+
+<main class="booking-container">
+
+    <a href="/" class="back-link">
+        ← Back to Facilities
+    </a>
+
+    <div class="booking-card">
+
+        <span class="eyebrow">RESERVE YOUR SPACE</span>
+
+        <h1>Book a Facility</h1>
+
+        <p class="auth-subtitle">
+            Choose your preferred date and time.
+        </p>
+
+        <div class="selected-facility">
+            <span>SELECTED FACILITY</span>
+            <h2>{{ facility.facility_name }}</h2>
+            <p>Status: {{ facility.status }}</p>
+        </div>
+
+        {% with messages = get_flashed_messages(
+            with_categories=true
+        ) %}
+            {% for category, message in messages %}
+                <div class="alert {{ category }}"
+                     role="status">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endwith %}
+
+        {% if facility.status == 'AVAILABLE' %}
+
+        <form method="POST"
+              action="{{ url_for(
+                  'book_facility',
+                  facility_id=facility.facility_id
+              ) }}">
+
+            <input type="hidden"
+                   name="csrf_token"
+                   value="{{ csrf_token }}">
+
+            <label for="booking_date">
+                Booking Date
+            </label>
+
+            <input
+                type="date"
+                id="booking_date"
+                name="booking_date"
+                min="{{ today }}"
+                required
+            >
+
+            <label for="start_time">
+                Start Time
+            </label>
+
+            <input
+                type="time"
+                id="start_time"
+                name="start_time"
+                step="60"
+                required
+            >
+
+            <label for="end_time">
+                End Time
+            </label>
+
+            <input
+                type="time"
+                id="end_time"
+                name="end_time"
+                step="60"
+                required
+            >
+
+            <button type="submit" class="auth-btn">
+                Confirm Booking →
+            </button>
+        </form>
+
+        {% else %}
+
+        <div class="alert error">
+            This facility is currently unavailable.
+        </div>
+
+        {% endif %}
+
+        <p class="booking-note">
+            Reservations are subject to availability.
+            Conflicting bookings and tournament matches
+            will be rejected automatically.
+        </p>
+
+    </div>
+
+</main>
+
+</body>
+</html>

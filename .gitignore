@@ -1,0 +1,45 @@
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Secrets — never upload
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Next.js
+node_modules/
+.next/
+out/
+
+# Temporary password scripts
+reset_admin_password.py
+
+# Editor
+.vscode/
+.DS_Store
+Thumbs.db
+
+
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+.next/
+reset_admin_password.py
+
+
+# Database backups
+database/*backup*.sql
+
+
+# Local database authentication seed data
+database/users_seed.sql

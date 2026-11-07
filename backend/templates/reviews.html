@@ -1,0 +1,459 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Facility Reviews | ARENA</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/auth.css') }}">
+
+    <style>
+        .reviews-container {
+            max-width: 950px;
+            margin: auto;
+            padding: 45px 20px 90px;
+        }
+
+        .review-panel {
+            background: #111d30;
+            border: 1px solid #27364b;
+            border-radius: 16px;
+            padding: 28px;
+            margin-top: 25px;
+        }
+
+        .reviews-container h1 {
+            font-size: clamp(28px, 4vw, 42px);
+            color: #f8fafc;
+            margin: 15px 0;
+        }
+
+        .review-panel h2 {
+            color: #f8fafc;
+            margin-bottom: 15px;
+        }
+
+        .review-panel p {
+            color: #9caec5;
+        }
+
+        .review-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .review-form label {
+            color: #e2e8f0;
+            font-weight: 600;
+        }
+
+        .review-form select,
+        .review-form textarea {
+            background: #0b1526;
+            color: #f8fafc;
+            border: 1px solid #304158;
+            border-radius: 9px;
+            padding: 13px;
+            font: inherit;
+            width: 100%;
+        }
+
+        .review-form textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        .review-btn {
+            padding: 12px 20px;
+            background: #3b82f6;
+            color: white;
+            border: 0;
+            border-radius: 9px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .review-btn:hover {
+            background: #2563eb;
+        }
+
+        .review-list {
+            display: grid;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .review-item {
+            background: #111d30;
+            border: 1px solid #27364b;
+            border-radius: 14px;
+            padding: 24px;
+        }
+
+        .review-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .review-stars {
+            color: #fbbf24;
+            font-size: 20px;
+        }
+
+        .review-comment {
+            color: #e2e8f0;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            margin: 15px 0;
+        }
+
+        .review-category {
+            color: #60a5fa;
+            font-size: 13px;
+        }
+
+        .review-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .delete-review-btn {
+            background: transparent;
+            color: #fca5a5;
+            border: 1px solid #ef4444;
+            border-radius: 9px;
+            padding: 11px 16px;
+            cursor: pointer;
+        }
+
+        details {
+            margin-top: 15px;
+        }
+
+        summary {
+            color: #60a5fa;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .review-muted {
+            color: #9caec5;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="navbar">
+    <a href="/" class="logo">
+        <span class="logo-icon">A</span>
+        ARENA<span class="logo-dot">.</span>
+    </a>
+
+    <nav class="nav-links">
+        <a href="/">Facilities</a>
+
+        {% if current_user_role == 'ADMIN' %}
+            <a href="{{ url_for('admin_dashboard') }}">
+                Admin Dashboard
+            </a>
+        {% elif current_user_name %}
+            <a href="{{ url_for('dashboard') }}">
+                My Dashboard
+            </a>
+        {% else %}
+            <a href="{{ url_for('auth.login') }}">
+                Login
+            </a>
+        {% endif %}
+    </nav>
+</header>
+
+<main class="reviews-container">
+
+    <a href="/" class="back-link">
+        ← Back to Facilities
+    </a>
+
+    <span class="eyebrow">ARENA COMMUNITY</span>
+
+    <h1>{{ facility.facility_name }} Reviews</h1>
+
+    <p class="review-muted">
+        {{ facility.sport_name }} · {{ facility.location }}
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert {{ category }}"
+                 role="status">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endwith %}
+
+    <section class="review-panel">
+        <h2>Facility Rating</h2>
+
+        {% if total_reviews > 0 %}
+            <div class="review-stars">
+                ★ {{ average_rating }} / 5
+            </div>
+
+            <p>
+                Based on {{ total_reviews }} reviews
+            </p>
+        {% else %}
+            <p>No ratings yet. Be the first to review!</p>
+        {% endif %}
+    </section>
+
+    {% if current_user_role == 'STUDENT' %}
+
+    <section class="review-panel">
+        <h2>Write a Review</h2>
+
+        <form class="review-form"
+              method="POST"
+              action="{{ url_for(
+                  'reviews.create_review',
+                  facility_id=facility.facility_id
+              ) }}">
+
+            <input type="hidden"
+                   name="csrf_token"
+                   value="{{ csrf_token }}">
+
+            <label for="rating">Rating</label>
+
+            <select id="rating" name="rating" required>
+                <option value="">Choose rating</option>
+                <option value="5">★★★★★ — Excellent</option>
+                <option value="4">★★★★ — Good</option>
+                <option value="3">★★★ — Average</option>
+                <option value="2">★★ — Poor</option>
+                <option value="1">★ — Very Poor</option>
+            </select>
+
+            <label for="category">
+                Feedback Category
+            </label>
+
+            <select id="category"
+                    name="category"
+                    required>
+                <option value="">Select category</option>
+
+                {% for category in categories %}
+                    <option value="{{ category }}">
+                        {{ category }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <label for="comment">
+                Your Feedback
+            </label>
+
+            <textarea
+                id="comment"
+                name="comment"
+                minlength="5"
+                maxlength="500"
+                placeholder="Tell us about this facility..."
+                required
+            ></textarea>
+
+            <button type="submit" class="review-btn">
+                Submit Review →
+            </button>
+        </form>
+    </section>
+
+    {% elif not current_user_name %}
+
+    <section class="review-panel">
+        <p>
+            Please
+            <a href="{{ url_for('auth.login') }}">
+                log in
+            </a>
+            as a student to submit a review.
+        </p>
+    </section>
+
+    {% endif %}
+
+    <section class="review-panel">
+        <h2>Student Reviews</h2>
+
+        {% if reviews %}
+
+            <div class="review-list">
+
+                {% for review in reviews %}
+
+                <article class="review-item">
+
+                    <div class="review-meta">
+                        <div>
+                            <strong>
+                                Student Review
+                            </strong>
+
+                            {% if current_user_id == review.user_id %}
+                                <span class="review-muted">
+                                    (Your review)
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <span class="review-stars">
+                            {{ "★" * review.rating }}
+                            {{ "☆" * (5 - review.rating) }}
+                        </span>
+                    </div>
+
+                    <span class="review-category">
+                        {{ review.category }}
+                    </span>
+
+                    <p class="review-comment">
+                        {{ review.comment }}
+                    </p>
+
+                    <p class="review-muted">
+                        {{ review.created_at }}
+                    </p>
+
+                    {% if current_user_role == 'STUDENT'
+                          and current_user_id == review.user_id %}
+
+                    <details>
+                        <summary>Edit Your Review</summary>
+
+                        <form
+                            class="review-form"
+                            method="POST"
+                            action="{{ url_for(
+                                'reviews.update_review',
+                                facility_id=facility.facility_id,
+                                review_id=review._id
+                            ) }}"
+                        >
+
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token }}"
+                            >
+
+                            <label>Rating</label>
+
+                            <select name="rating" required>
+                                {% for number in range(5, 0, -1) %}
+                                    <option
+                                        value="{{ number }}"
+                                        {% if number == review.rating %}
+                                            selected
+                                        {% endif %}
+                                    >
+                                        {{ number }} / 5
+                                    </option>
+                                {% endfor %}
+                            </select>
+
+                            <label>Category</label>
+
+                            <select name="category" required>
+                                {% for category in categories %}
+                                    <option
+                                        value="{{ category }}"
+                                        {% if category == review.category %}
+                                            selected
+                                        {% endif %}
+                                    >
+                                        {{ category }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+
+                            <label>Comment</label>
+
+                            <textarea
+                                name="comment"
+                                minlength="5"
+                                maxlength="500"
+                                required
+                            >{{ review.comment }}</textarea>
+
+                            <button type="submit"
+                                    class="review-btn">
+                                Save Changes
+                            </button>
+                        </form>
+                    </details>
+
+                    <div class="review-actions">
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'reviews.delete_review',
+                                facility_id=facility.facility_id,
+                                review_id=review._id
+                            ) }}"
+                            onsubmit="return confirm(
+                                'Delete this review permanently?'
+                            );"
+                        >
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token }}"
+                            >
+
+                            <button
+                                type="submit"
+                                class="delete-review-btn"
+                            >
+                                Delete Review
+                            </button>
+                        </form>
+                    </div>
+
+                    {% endif %}
+
+                </article>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <p>
+                No reviews yet for this facility.
+            </p>
+
+        {% endif %}
+    </section>
+
+</main>
+
+</body>
+</html>

@@ -1,0 +1,110 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Login | ARENA</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+
+<body class="auth-page">
+
+    <header class="navbar">
+        <a href="/" class="logo">
+            <span class="logo-icon">A</span>
+            ARENA<span class="logo-dot">.</span>
+        </a>
+
+        <a href="/" class="back-link">
+            ← Back to Home
+        </a>
+    </header>
+
+    <main class="auth-wrapper">
+
+        <div class="auth-card">
+
+            <span class="eyebrow">
+                WELCOME TO ARENA
+            </span>
+
+            <h1>Welcome back.</h1>
+
+            <p class="auth-subtitle">
+                Sign in to book facilities,
+                manage teams, and explore tournaments.
+            </p>
+
+            <!-- Display Flask messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <div class="alert {{ category }}"
+                         role="status">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endwith %}
+
+            <form method="POST"
+                  action="{{ url_for('auth.login') }}">
+
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token }}"
+                >
+
+                <label for="email">
+                    Email Address
+                </label>
+
+                <input
+                    id="email"
+                    type="email"
+                    name="email"
+                    placeholder="you@example.com"
+                    maxlength="150"
+                    autocomplete="email"
+                    required
+                >
+
+                <label for="password">
+                    Password
+                </label>
+
+                <input
+                    id="password"
+                    type="password"
+                    name="password"
+                    placeholder="Enter your password"
+                    autocomplete="current-password"
+                    required
+                >
+
+                <button type="submit" class="auth-btn">
+                    Sign In →
+                </button>
+
+            </form>
+
+            <p class="auth-switch">
+                Don't have an account?
+
+                <a href="{{ url_for('auth.register') }}">
+                    Create Account
+                </a>
+            </p>
+
+        </div>
+
+    </main>
+
+</body>
+</html>
